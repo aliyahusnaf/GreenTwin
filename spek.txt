@@ -1,0 +1,240 @@
+Urban Energy Digital Twin
+Ringkasan Fitur & Analisis Kompetitor
+Asian Hackathon for Green Future 2026  ·  Theme 1: Renewable Energy & Low-Carbon Mobility  ·  Konteks: Asia Tenggara
+ 
+Dokumen ini merangkum 4 fitur utama produk, peran 3D modelling dan AI di tiap fitur, analisis kompetitor, serta data urgensi masalah di Asia Tenggara yang menjadi landasan solusi kami.
+ 
+Fitur 1 — Solar Rooftop Heatmap
+Apa masalahnya di Asia Tenggara?
+ASEAN memiliki potensi solar yang masif — dengan target 23% renewable energy mix di 2025, kawasan ini perlu menambah puluhan GW kapasitas baru. Namun rooftop solar masih sangat tertinggal di hampir semua negara SEA: Vietnam mencapai target besar di utilitas tapi rooftop rumahan lambat, Indonesia target 3,6 GW rooftop di 2025 meleset jauh (baru ~538 MWp terpasang), Thailand dan Malaysia masih di bawah potensi. Hambatan terbesar yang sama di semua negara: orang tidak tahu apakah atap mereka layak dipasangi panel surya tanpa harus bayar konsultan terlebih dahulu.
+ 
+23%
+Target renewable ASEAN 2025
+28 GW
+Operating solar & wind ASEAN (2024)
+220 GW
+Prospective pipeline belum dibangun
+3%
+Hanya dalam konstruksi aktif
+
+ 
+Cara kerja fiturnya
+•       Setiap atap gedung di 3D model kota diwarnai otomatis: merah = potensi tinggi, biru = rendah
+•       Skor dihitung dari luas atap, orientasi hadap, dan shading loss dari gedung di sekitarnya
+•       Klik gedung mana saja: langsung lihat estimasi produksi kWh/hari, penghematan listrik/bulan, payback period
+•       Tanya dalam bahasa natural: "Gedung mana di kawasan ini yang paling worth it dipasangi panel surya?"
+•       Berlaku lintas kota di SEA — data solar irradiance tersedia global via NASA POWER API, OSM tersedia di semua kota besar ASEAN
+ 
+Peran 3D modelling
+3D model adalah 'layar' tempat heatmap ditampilkan. Tanpa 3D, informasi ini hanya tabel angka. Dengan 3D, perencana kota di Bangkok, Hanoi, Jakarta, atau Manila bisa sekaligus lihat gedung mana yang merah (prioritas tinggi), seberapa besar atapnya, dan apakah ada bangunan lain yang menghalangi — semua dalam satu pandangan visual yang intuitif.
+Peran AI
+•       Multimodal RAG: fusi data NASA POWER (solar irradiance), BMKG/cuaca lokal, OpenStreetMap (geometri atap), tarif listrik per negara
+•       LLM conversational layer: jawab pertanyaan dalam bahasa lokal masing-masing negara SEA, bukan output teknis
+•       Ontology layer: pastikan estimasi konsisten dengan constraint fisik dan regulasi lokal (kuota rooftop, net-metering policy)
+ 
+Analisis kompetitor
+Kompetitor
+Kelebihan
+Kekurangan
+Diferensiasi kita
+Google Project Sunroof
+Sangat akurat, per-rumah
+Belum cover mayoritas kota SEA, tidak ada chat
+Bahasa lokal + conversational AI + konteks regulasi tiap negara SEA
+Google Solar API
+Data lengkap, developer-friendly
+Hanya API, tidak ada UI publik, coverage SEA terbatas
+Langsung bisa dipakai warga awam tanpa coding
+Global Solar Atlas
+Gratis, cover seluruh SEA
+Hanya regional, tidak per-atap atau per-gedung
+Granularitas per gedung + 3D visualization + chat
+VinUni TwinGPT
+LLM + 3D simulation
+Fokus manufacturing & robotics, bukan solar urban
+Aplikasi ke domain solar urban — gap yang belum diisi TwinGPT
+
+ 
+Celah & diferensiasi utama
+Tidak ada satu pun tool yang menggabungkan: (1) solar heatmap per-gedung, (2) conversational AI dalam bahasa lokal SEA, dan (3) konteks regulasi tiap negara (tarif listrik, kuota rooftop, net-metering). Google Sunroof paling dekat secara fitur tapi belum hadir di sebagian besar kota Asia Tenggara dan tidak bisa diajak ngobrol.
+
+ 
+Fitur 2 — EV & Emisi: Terjemahkan Dampak ke Kehidupan Sehari-hari
+Apa masalahnya di Asia Tenggara?
+Transportasi menyumbang 20-25% emisi CO₂ global, dan di SEA kota-kota besar didominasi kendaraan pribadi dengan infrastruktur publik yang masih terbatas. EV sedang booming di SEA — Singapore dan Vietnam sudah capai ~40% EV share dari penjualan mobil baru di 2025, Thailand 21%, Indonesia 15%. Tapi infrastruktur pengisian (SPKLU) masih sangat kurang.
+ 
+20-25%
+Kontribusi transport ke emisi global
+~40%
+EV share Vietnam & Singapore (2025)
+21%
+EV share Thailand (2025)
+~10%
+EV share SEA rata-rata (2024)
+
+ 
+Cara kerja fiturnya
+kayanya gw lebih pengen ke arah detect real time spklu mana lg rame apa ga, antriannya gimana gitu2 biar ga hrs cari2 spklu yg lg sepi dan antrinya ga lama. diintegrate sm info fast charging apa ga
+Peran 3D modelling
+Jalur perjalanan dirender di atas kota 3D yang dikenal pengguna. Seseorang di Ho Chi Minh City, Bangkok, atau Jakarta bisa mana SPKLU yang lagi ramai
+Peran AI
+•       RAG dari data traffic real-time, emission factor kendaraan per negara SEA, lokasi SPKLU aktif, dan tarif transportasi publik lokal 
+Analisis kompetitor
+Kompetitor
+Kelebihan
+Kekurangan
+Diferensiasi kita
+IEA EV LCA Calculator
+Sangat akurat secara ilmiah
+Sangat teknis, tidak ada chat, tidak ada peta
+Output bahasa awam + peta 3D + analogi sehari-hari
+Carbon calculators lokal
+Ada di beberapa negara SEA
+Hanya form input-output, tidak ada peta, tidak real-time
+Real-time di peta 3D kota + bahasa lokal + konteks transportasi lokal
+VinUni CEI Digital Twin
+Traffic simulation ada
+Output untuk researcher, bukan warga awam
+Interface awam + analogi konkrit + multi-kota SEA
+
+ 
+Celah & diferensiasi utama
+EV adoption di SEA sedang meledak, tapi warga tidak punya alat untuk 'merasakan' dampak pilihan kendaraan mereka secara personal. Semua tool yang ada output-nya angka teknis. Tidak ada yang menerjemahkan ke analogi sehari-hari + tampilkan di 3D kota + berikan konteks transportasi lokal tiap negara SEA.
+
+ 
+Fitur 3 — Chat AI Kota: Tanya Apa Saja tentang Energi & Lingkungan Kotamu
+Apa masalahnya di Asia Tenggara?
+99% penduduk Asia Tenggara hidup di area dengan kualitas udara di bawah standar WHO. Di 2021, polusi udara menyebabkan 630.000 kematian di Asia Tenggara — dengan peningkatan 65% kematian terkait ozon antara 2010-2021. Jakarta sendiri mencatat 5.054 kematian akibat polusi udara di 2019. Data sensor kota sebenarnya tersedia, tapi tersebar di dashboard teknis yang tidak user-friendly dan tidak bisa dijawab dalam bahasa sehari-hari.
+ 
+99%
+Penduduk SEA di bawah standar udara WHO
+630.000
+Kematian akibat polusi udara SEA (2021)
++65%
+Peningkatan kematian terkait ozon 2010-2021
+37
+Dari 40 kota paling terpolusi dunia, ada di SEA
+
+ 
+Cara kerja fiturnya
+•       Pengguna ketik pertanyaan dalam bahasa lokal → AI jawab berdasarkan data sensor real-time kota
+•       Jawaban langsung divisualisasikan di 3D model: zona relevan di-highlight, bukan hanya teks
+•       Contoh: 'Udara di sini aman buat anak saya main sore ini?' → AI highlight zona AQI di peta, jelaskan jam aman, beri rekomendasi praktis
+•       Berbeda dengan ChatGPT generik — AI ini tahu kondisi spesifik kotamu hari ini berdasarkan data sensor aktual
+•       Bisa digunakan warga di Bangkok, Hanoi, Jakarta, Manila — masing-masing dapat konteks lokal yang relevan
+ 
+Peran 3D modelling
+Saat AI menjawab, area yang relevan langsung muncul di 3D model kota. Zona kuning berarti AQI sedang, zona hijau berarti aman. Ini membuat jawaban AI terasa konkrit dan spasial, bukan hanya teks yang dibaca dan dilupakan.
+Peran AI
+•       Ini penerapan paling langsung dari arsitektur TwinGPT: multimodal RAG fusi data sensor udara real-time, data cuaca, dan ontology knowledge base kesehatan
+•       LLM memastikan jawaban dalam bahasa lokal yang dipahami semua kalangan di tiap negara SEA
+•       Ontology layer memvalidasi jawaban agar tidak berikan rekomendasi berbahaya atau menyesatkan
+ 
+Analisis kompetitor
+Kompetitor
+Kelebihan
+Kekurangan
+Diferensiasi kita
+ChatGPT / Claude
+Bahasa natural, mudah digunakan
+Tidak punya data sensor real-time kota manapun
+Terhubung ke data sensor kota SEA secara real-time
+IQAir / AirVisual
+Data AQI akurat dan real-time di banyak kota SEA
+Hanya angka, tidak bisa diajak ngobrol, tidak ada rekomendasi praktis
+Conversational + 3D visualization + rekomendasi bahasa awam
+App cuaca pemerintah lokal
+Data resmi per negara
+UI teknis, tidak interaktif, tidak ada AI
+Interface tanya-jawab + bahasa sehari-hari + rekomendasi personal
+VinUni TwinGPT
+LLM + sensor + 3D — paling mirip secara arsitektur!
+Domain manufacturing & robotics, bukan untuk publik kota
+Domain warga kota & kesehatan — 'TwinGPT untuk publik SEA'
+
+ 
+Celah & diferensiasi utama
+Fitur ini paling langsung terinspirasi arsitektur TwinGPT: multimodal RAG + LLM + sensor data. Perbedaan krusial: TwinGPT untuk sistem industri, fitur ini untuk warga kota biasa di seluruh SEA. Framing yang tepat di hadapan juri VinUni: 'TwinGPT applied to urban public health across Southeast Asia.'
+
+ 
+Fitur 4 — Policy Simulator: Lihat Dampak Kebijakan Sebelum Dijalankan
+Apa masalahnya di Asia Tenggara?
+Semua negara SEA sedang dalam transisi energi besar-besaran — jalur bus listrik, zona EV, subsidi solar, pembatasan kendaraan berbahan bakar fosil. Tapi kebijakan-kebijakan ini sering gagal mendapat dukungan publik karena warga tidak bisa memvisualisasikan dampaknya sebelum dijalankan. Pemerintah presentasi dengan slide dan tabel angka teknis — warga tidak relate. Tidak ada platform yang bisa menjawab dalam bahasa awam: 'Kalau BRT baru ini dibangun, perjalanan harianku berubah apa?'
+ 
+30/30
+Target Thailand: 30% kendaraan zero-emisi 2030
+~40%
+Vietnam EV share 2025 (dari <0,05% di 2021)
+23%
+ASEAN target renewable energy mix 2025
+97%
+Prospective pipeline ASEAN belum dalam konstruksi
+
+ 
+Cara kerja fiturnya
+•       Pengguna ketik skenario kebijakan dalam bahasa biasa: 'Kalau pemkot bangun jalur bus listrik di jalan ini, dampaknya apa?'
+•       Sistem simulasikan skenario di 3D model kota — tampilkan kondisi SEBELUM vs SESUDAH secara visual berdampingan
+•       Output dalam bahasa yang relate: 'Waktu tempuhmu turun dari 52 menit ke 35 menit kalau naik bus listriknya'
+•       Warga lihat jalur bus melewati jalan depan rumah mereka di 3D model kota mereka sendiri, bukan peta generik
+•       Bisa dipakai pemerintah kota sebagai alat komunikasi publik yang transparan dan mudah dipahami
+ 
+Peran 3D modelling
+Ini fitur di mana 3D model paling kritikal. Before/after kebijakan tidak bisa dikomunikasikan hanya lewat teks. Dengan 3D: warga di Bangkok, Hanoi, atau Jakarta secara harfiah melihat jalur bus baru melintas di jalan yang mereka kenal setiap hari — langsung relevan dan personal.
+Peran AI
+•       Ontology layer encode constraint fisik dan regulasi transportasi tiap negara SEA: simulasi tidak akan hasilkan skenario yang melanggar hukum fisika atau regulasi yang ada
+•       LLM terjemahkan input kebijakan bahasa natural ke parameter simulasi, lalu terjemahkan output kembali ke bahasa awam
+•       Multimodal RAG: fusi data traffic historis, pola mobilitas, data emisi, dan regulasi transportasi lokal untuk simulasi yang realistis
+ 
+Analisis kompetitor
+Kompetitor
+Kelebihan
+Kekurangan
+Diferensiasi kita
+VinUni CEI Digital Twin
+Policy simulation traffic & emisi Hanoi
+Output untuk researcher, tidak untuk publik awam
+Interface publik + bahasa lokal + before/after 3D visual lintas kota SEA
+SUMO / VISSIM
+Simulasi traffic sangat akurat
+Butuh keahlian teknis khusus, tidak ada chat interface
+No-code: siapa saja bisa simulasi lewat pertanyaan biasa
+Sidewalk Labs (Google)
+Urban simulation canggih
+Proyek sudah tutup, terlalu mahal, bukan untuk publik
+Open access, fokus Asia Tenggara, bahasa lokal
+VinUni TwinGPT
+LLM simulation ada
+Ontology untuk sistem industri, bukan kebijakan kota
+Ontology untuk urban policy SEA + warga sebagai pengguna utama
+
+ 
+Celah & diferensiasi utama
+Ini gap terbesar dan paling original di seluruh produk. Tidak ada platform di Asia Tenggara yang bisa: (1) terima pertanyaan kebijakan dalam bahasa lokal awam, (2) simulasikan dampaknya di 3D model kota secara visual, dan (3) sampaikan hasilnya dalam bahasa yang warga biasa bisa pahami dan gunakan untuk ambil keputusan. SEA sedang dalam masa kebijakan energi paling aktif dalam sejarahnya — ini timing yang sempurna.
+
+ 
+Ringkasan: Peran 3D & AI per Fitur
+Fitur
+Peran 3D Model
+Peran AI (LLM + RAG)
+Gap di SEA
+Solar Heatmap
+Warnai setiap atap sesuai potensi solar di kota SEA mana pun
+RAG: NASA POWER + cuaca lokal + OSM. LLM: bahasa lokal
+Google Sunroof belum cover SEA; tidak ada tool chat solar lokal
+EV & Emisi
+Jalur diwarnai per intensitas emisi di kota yang dikenal user
+RAG: traffic + SPKLU + emission factor. LLM: analogi awam
+EV booming tapi tidak ada tool yang terjemah emisi ke bahasa awam + peta lokal
+Chat AI Kota
+Zona relevan di-highlight saat AI jawab pertanyaan real-time
+Multimodal RAG: sensor + cuaca. LLM: bahasa lokal SEA
+TwinGPT untuk industri — ini versi publik untuk warga kota SEA
+Policy Sim
+Before/after kebijakan berdampingan di 3D kota masing-masing
+Ontology: constraint regulasi SEA. LLM: input/output natural
+SEA dalam masa kebijakan energi paling aktif — belum ada platform publik untuk ini
+
+ 
+ 
+Sumber: Global Energy Monitor, Ember Energy, IEA, State of Global Air 2024, WRI, UNEP, Beacon VC, InfoLink
+

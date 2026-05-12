@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoGrid Vietnam Slide</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #F0F4F8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .slide-container {
+      width: 1330px;
+      min-height: 750px;
+      background: #FFFFFF;
+      position: relative;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      box-sizing: border-box;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+    .circle-number {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #F0F4F8;
+      border: 1px solid #BBCAD8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #1C2F5E;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .title-group {
+      margin-left: 20px;
+    }
+    .title-text {
+      color: #1C2F5E;
+      font-size: 24px;
+    }
+    .title-sub {
+      color: #6B7FA3;
+      font-size: 14px;
+      font-style: italic;
+      margin-top: 5px;
+    }
+    .section-header {
+      background: #1C2F5E;
+      color: #FFF;
+      text-align: center;
+      font-weight: bold;
+      padding: 8px;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .main-description {
+      border: 1px solid #BBCAD8;
+      padding: 10px 15px;
+      font-size: 12.5px;
+      line-height: 1.4;
+      color: #1A1A2E;
+      margin-bottom: 15px;
+      flex-shrink: 0;
+    }
+    .columns {
+      display: flex;
+      gap: 15px;
+      flex: 1; /* allow it to grow and fill available space */
+      margin-bottom: 20px; /* space before impact bar */
+    }
+    .col {
+      border: 1px solid #BBCAD8;
+      display: flex;
+      flex-direction: column;
+    }
+    .col-header {
+      color: #FFF;
+      font-weight: bold;
+      text-align: center;
+      padding: 10px;
+      font-size: 12px;
+      background: #1C2F5E;
+      flex-shrink: 0;
+    }
+    .col-left {
+      width: 250px;
+      background: #EEF4FB;
+      padding: 10px;
+      flex: 1;
+    }
+    .col-mid {
+      flex: 1;
+      padding: 10px;
+      display: flex;
+      gap: 15px;
+      border: 1px solid #BBCAD8;
+      border-top: none;
+    }
+    .col-right {
+      width: 250px;
+      background: #EEF4FB;
+      padding: 10px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+    }
+    .module-box {
+      border: 1px solid #BBCAD8;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .module-header {
+      color: #FFF;
+      font-weight: bold;
+      text-align: center;
+      padding: 8px;
+      font-size: 12px;
+    }
+    .problem-item {
+      background: #D6E4F7;
+      border: 1px solid #3A5BA0;
+      color: #1C2F5E;
+      font-size: 11px;
+      text-align: center;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+    }
+    .module-sub-header {
+      background: #1C2F5E;
+      color: #FFF;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 4px 8px;
+      margin-top: 5px;
+    }
+    .module-text {
+      font-size: 10.5px;
+      color: #1A1A2E;
+      padding: 6px 8px;
+      line-height: 1.35;
+    }
+    .badge {
+      font-size: 10px;
+      font-weight: bold;
+      text-align: center;
+      padding: 6px;
+      margin-top: auto;
+    }
+    .badge-green {
+      background: #D4EDDA;
+      border: 1px solid #217A3C;
+      color: #217A3C;
+    }
+    .badge-teal {
+      background: #D0EEEA;
+      border: 1px solid #1A7A6E;
+      color: #1A7A6E;
+    }
+    .key-features {
+      background: #F0F4F8;
+      border: 1px solid #BBCAD8;
+      border-left: none;
+      border-right: none;
+      padding: 4px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: bold;
+      color: #1C2F5E;
+    }
+    .feature-item {
+      font-size: 9.5px;
+      font-weight: bold;
+      padding: 5px;
+      margin: 4px 8px;
+      border: 1px solid #BBCAD8;
+    }
+    .feature-item-blue { background: #D6E4F7; color: #1C2F5E; }
+    .feature-item-teal { background: #D0EEEA; color: #1A7A6E; }
+    
+    .output-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .output-icon { font-size: 24px; }
+    .output-text {
+      font-size: 11px;
+      color: #1C2F5E;
+      font-weight: bold;
+      line-height: 1.2;
+    }
+    .output-sub {
+      font-size: 9px;
+      color: #6B7FA3;
+      font-weight: normal;
+      margin-top: 3px;
+    }
+    
+    .impact-bar {
+      background: #1C2F5E;
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .impact-title { font-weight: bold; font-size: 14px; margin-right: 30px; }
+    .impact-item { display: flex; align-items: center; margin-right: 25px; }
+    .impact-val { color: #F9A825; font-size: 16px; font-weight: bold; margin-right: 8px; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <div class="header">
+      <div class="circle-number">4</div>
+      <div class="title-group">
+        <div class="title-text">EcoGrid Vietnam <b>: AI-Powered 3D Urban Energy & Mobility Intelligence Platform</b></div>
+        <div class="title-sub">A shared AI intelligence layer — closing Vietnam's developer↔government coordination gap on renewable energy & low-carbon mobility</div>
+      </div>
+    </div>
+
+    <div class="section-header" style="width: 100%;">Solution Description</div>
+    <div class="main-description">
+      Vietnam's low-carbon transition is trapped in a <b>structural coordination deadlock</b>: EV sales surged 2.5× in 2024, yet 18% of would-be EV buyers abandon the purchase due to insufficient chargers (FTU HCMC, 2024); Vietnam needs <b>USD 12B in EVSE investment (HSBC)</b> that won't materialize without coordination. EcoGrid resolves this as a <b>shared AI intelligence layer</b> with a <b>closed feedback loop</b>: developer plans → city energy forecast; policy simulation → recommends where to prioritize EVSE & solar (e.g. EV demand surge in District X → platform flags that district for EVSE deployment). The <b>3D Digital Twin</b> is not decoration — it is the common language allowing a rooftop solar decision in District 1 to be understood in the context of mobility policy in District 3.
+    </div>
+
+    <div class="columns">
+      <!-- Left Column -->
+      <div class="col" style="border: none;">
+        <div class="col-header" style="background:#1C2F5E; margin-bottom: -1px;">The Problem</div>
+        <div class="col-left" style="height: 100%; box-sizing: border-box;">
+          <div class="problem-item">Developers build EVSE & solar<br>without knowing grid limits</div>
+          <div class="problem-item">Government bans fossil motorbikes<br>without knowing if charging infra exists</div>
+          <div class="problem-item">18% of EV buyers abandon<br>purchase: not enough chargers<br>(FTU HCMC, 2024)</div>
+          <div class="problem-item">Vietnam needs USD 12B in<br>charging investment (HSBC)</div>
+          <div class="problem-item">World Bank: grid capacity<br>must grow 4% by 2035 just<br>for EV charging demand</div>
+        </div>
+      </div>
+
+      <!-- Middle Columns -->
+      <div class="col" style="flex:1; border:none;">
+        <div class="col-header" style="background:#1C2F5E; margin-bottom: -1px;">How It Works — Two Integrated Modules + Digital Twin</div>
+        <div class="col-mid" style="border: 1px solid #BBCAD8; border-top: none;">
+          <!-- Module 1 -->
+          <div class="module-box">
+            <div class="module-header" style="background:#3A5BA0;">MODULE 1 — Smart Infrastructure Planning</div>
+            <div style="font-size:10px; color:#6B7FA3; text-align:center; font-style:italic; padding:4px;">For: Developers · EVSE Operators · ESG Investors</div>
+            
+            <div class="module-sub-header">Sub-Feature 1A — Grid Stability, BESS Sizing & EVSE Placement</div>
+            <div class="module-text">Ingests EVN historical load data → computes proposed building peak demand vs. local transformer capacity → auto-sizes optimal BESS (kWh + cost estimate) to prevent grid overload. Cable loss minimization (∑I²·R·L) finds optimal EV charging pile positions inside parking structure. 3D underground X-ray view shows existing cable trenches & transformer tie-in points — no trial-and-error surveys. Supports Vietnam's 150,000 EVSE target by 2030.</div>
+            
+            <div class="module-sub-header">Sub-Feature 1B — Solar Rooftop Optimization</div>
+            <div class="module-text">Full annual ray-casting simulation (Solargis Vietnam GHI): casts shadow volumes from neighbor buildings hour-by-hour → pinpoints best-yield rooftop zones. Drag-and-drop panel placement gives live AI feedback: annual kWh yield, CO₂ offset, payback period. Directly advances Vietnam's 39.2% renewable energy target by 2045.</div>
+            
+            <div class="badge badge-green">Output: Energy Efficiency & Grid Readiness Certificate (ESG-ready)</div>
+            <div class="key-features">Key Features Prototyped at Hackathon</div>
+            <div class="feature-item feature-item-blue">① AI Load Balancing + BESS sizing from EVN data</div>
+            <div class="feature-item feature-item-blue">② Solar ray-casting → drag-and-drop panel feedback</div>
+            <div class="feature-item feature-item-blue" style="margin-bottom: 5px;">③ EVSE cable-loss optimizer + 3D underground X-ray</div>
+          </div>
+
+          <!-- MIddle arrow -->
+          <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width:60px;">
+            <div style="font-size:36px; color:#3A5BA0; font-weight:bold;">⇄</div>
+            <div style="font-size:10px; color:#3A5BA0;">feedback loop</div>
+          </div>
+
+          <!-- Module 2 -->
+          <div class="module-box">
+            <div class="module-header" style="background:#1A7A6E;">MODULE 2 — Low-Carbon Mobility Policy Simulation</div>
+            <div style="font-size:10px; color:#6B7FA3; text-align:center; font-style:italic; padding:4px;">For: Depts. of Transport · City Planning · MoIT · EVN</div>
+            
+            <div class="module-text" style="background:#D0EEEA; border:1px solid #1A7A6E; margin:5px; margin-top:0;">
+              <b style="color:#1A7A6E;">⚡ Urgent use case: </b><b>Hanoi Directive 20</b><br>
+              Gasoline motorbike ban: Ring Road 1 (Jul 2026) → Ring Road 2 (2028) → Ring Road 3 (2030). 6.9M motorbikes affected. Two-wheelers meet <b>72.6% of Hanoi's transport needs</b> (ICCT, 2022) — largest urban mobility transition in Asia.
+            </div>
+
+            <div class="module-sub-header">Agent-Based Modeling (ABM)</div>
+            <div class="module-text" style="padding-bottom:0;">Simulates 10,000s of synthetic citizens (calibrated GSO 2023 household survey). Apply Ring Road ban → predicts who shifts to e-moto, BRT, private EV, or faces mobility exclusion (equity flag).</div>
+
+            <div class="module-sub-header" style="margin-top:5px;">Emission Physics Engine + RE Demand Forecaster</div>
+            <div class="module-text" style="padding-bottom:0;">Computes CO₂, NOx, PM2.5 changes (IPCC Tier 2 / MoNRE). Calculates additional green electricity needed per scenario. <b style="color:#B71C1C;">Critical flag: does the EV transition actually reduce emissions, or merely shift them from exhaust pipes to coal plants?</b> — answered explicitly per scenario.</div>
+
+            <div class="module-sub-header" style="margin-top:5px;">3D Pollution Fog + XAI Policy Reports</div>
+            <div class="module-text">Live volumetric PM2.5 fog layer thins as policy sliders move (zone, timeline, EV subsidy). Claude API generates plain-language XAI report: why emissions fell, who benefits, who is at risk.</div>
+
+            <div class="badge badge-teal">Output: XAI Policy Report + RE Demand Forecast per Scenario</div>
+            <div class="key-features">Key Features Prototyped at Hackathon</div>
+            <div class="feature-item feature-item-teal">④ ABM policy slider → behavioral mode-shift prediction</div>
+            <div class="feature-item feature-item-teal" style="margin-bottom: 5px;">⑤ 3D fog visualization + XAI Claude API report</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="col" style="border: none;">
+        <div class="col-header" style="background:#1C2F5E; margin-bottom: -1px;">Key Outputs</div>
+        <div class="col-right" style="height: 100%; box-sizing: border-box; display:flex; flex-direction:column; justify-content:space-evenly;">
+          <div class="output-item"><div class="output-icon">📋</div><div><div class="output-text">Energy Efficiency &<br>Grid Readiness Certificate</div><div class="output-sub">For ESG reporting & regulatory filing</div></div></div>
+          <div style="border-bottom: 1px dashed #BBCAD8; width: 100%;"></div>
+          <div class="output-item"><div class="output-icon">⚡</div><div><div class="output-text">BESS Sizing Recommendation<br>+ Cost Estimate</div><div class="output-sub">Per building, with payback period</div></div></div>
+          <div style="border-bottom: 1px dashed #BBCAD8; width: 100%;"></div>
+          <div class="output-item"><div class="output-icon">☀️</div><div><div class="output-text">Solar Panel Placement Map<br>+ Live kWh Yield</div><div class="output-sub">Drag-and-drop interactive output</div></div></div>
+          <div style="border-bottom: 1px dashed #BBCAD8; width: 100%;"></div>
+          <div class="output-item"><div class="output-icon">📊</div><div><div class="output-text">Policy Impact Projection<br>(CO₂, PM2.5, NOx)</div><div class="output-sub">Per Ring Road zone & timeline scenario</div></div></div>
+          <div style="border-bottom: 1px dashed #BBCAD8; width: 100%;"></div>
+          <div class="output-item"><div class="output-icon">🤖</div><div><div class="output-text">XAI Plain-Language<br>Policy Report</div><div class="output-sub">Auto-generated via Claude API</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Impact Bottom Bar -->
+    <div class="impact-bar">
+      <div class="impact-title">Impact</div>
+      <div class="impact-item"><div class="impact-val">15–20%</div><div>higher solar yield per building vs. unguided placement</div></div>
+      <div class="impact-item"><div class="impact-val">8–12 MW</div><div>peak grid demand reduced per 100 buildings (BESS)</div></div>
+      <div class="impact-item"><div class="impact-val">6.9M</div><div>motorbikes simulated in Directive 20 Ring Road scenarios</div></div>
+      <div class="impact-item"><div class="impact-val">39.2%</div><div>RE target 2045 — directly supported by Module 1</div></div>
+    </div>
+  </div>
+</body>
+</html>
