@@ -1784,44 +1784,54 @@ function PollutionFog({
   const t = useRef(0);
   const dissipateT = useRef(0);
 
+  const blobs = useMemo(() => {
+    const list: { basePos: [number, number, number]; baseY: number; scale: number; phase: number }[] = [];
+    const n = 22;
+    for (let i = 0; i < n; i++) {
+      const tt = (i + 0.5) / n - 0.5;
+      // Deterministic pseudo-random scatter so a fresh river of smog appears
+      // dense and natural rather than evenly spaced.
+      const heightOffset = ((i * 7919) % 100) / 100;     // 0..1
+      const lateralOffset = (((i * 6113) % 100) / 100 - 0.5) * road.width * 0.55;
+      const baseY = 0.55 + heightOffset * 0.6;            // 0.55..1.15
+      const basePos: [number, number, number] = road.axis === 'x'
+        ? [tt * road.length, baseY, road.center + lateralOffset]
+        : [road.center + lateralOffset, baseY, tt * road.length];
+      const scale = 1.6 + ((i * 4931) % 100) / 100 * 0.9; // 1.6..2.5
+      const phase = ((i * 8147) % 100) / 100 * Math.PI * 2;
+      list.push({ basePos, baseY, scale, phase });
+    }
+    return list;
+  }, [road]);
+
   useFrame((_, dt) => {
     t.current += dt;
     const elapsed = elapsedRef.current;
     const shouldDissipate = policyActive && elapsed >= dissipateAt;
     if (shouldDissipate && dissipateT.current < 1) {
-      dissipateT.current = Math.min(1, dissipateT.current + dt * 0.4);
+      dissipateT.current = Math.min(1, dissipateT.current + dt * 0.45);
     } else if (!shouldDissipate && dissipateT.current > 0) {
       dissipateT.current = Math.max(0, dissipateT.current - dt * 0.6);
     }
     if (!ref.current) return;
     ref.current.children.forEach((child, i) => {
-      const mat = (child as THREE.Mesh).material as THREE.MeshBasicMaterial;
-      const baseOpacity = 0.28 + Math.sin(t.current + i) * 0.06;
-      mat.opacity = baseOpacity * (1 - dissipateT.current);
-      child.position.y = 0.45 + dissipateT.current * 2.0 + Math.sin(t.current * 0.4 + i * 0.7) * 0.06;
+      const blob = blobs[i];
+      if (!blob) return;
+      const sprite = child as THREE.Sprite;
+      const mat = sprite.material as THREE.SpriteMaterial;
+      const breath = 0.55 + Math.sin(t.current * 0.9 + blob.phase) * 0.12;
+      mat.opacity = breath * (1 - dissipateT.current);
+      // Each blob drifts and rises as it dissipates upwards
+      sprite.position.y = blob.baseY + dissipateT.current * 2.4 + Math.sin(t.current * 0.5 + blob.phase) * 0.08;
     });
   });
 
-  const sprites = useMemo(() => {
-    const list: [number, number, number][] = [];
-    const n = 14;
-    for (let i = 0; i < n; i++) {
-      const tt = (i + 0.5) / n - 0.5;
-      const pos: [number, number, number] = road.axis === 'x'
-        ? [tt * road.length, 0.45, road.center]
-        : [road.center, 0.45, tt * road.length];
-      list.push(pos);
-    }
-    return list;
-  }, [road]);
-
   return (
     <group ref={ref}>
-      {sprites.map((p, i) => (
-        <mesh key={i} position={p} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[2.2, 2.2]} />
-          <meshBasicMaterial color={THEME.fog} transparent opacity={0.28} depthWrite={false} />
-        </mesh>
+      {blobs.map((b, i) => (
+        <sprite key={i} position={b.basePos} scale={[b.scale, b.scale, 1]}>
+          <spriteMaterial color={THEME.fog} transparent opacity={0.55} depthWrite={false} />
+        </sprite>
       ))}
     </group>
   );
