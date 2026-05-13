@@ -1246,6 +1246,155 @@ function SolarHud({
   );
 }
 
+// ─── Underground X-Ray (cable trenches + transformer) ─────────────────────
+function UndergroundXRay({
+  position,
+  visible,
+}: {
+  position: [number, number] | null;
+  visible: boolean;
+}) {
+  const ref = useRef<THREE.Group>(null);
+  const opacityRef = useRef(0);
+  const t = useRef(0);
+  const sweepRef = useRef<THREE.Mesh>(null);
+
+  useFrame((_, dt) => {
+    t.current += dt;
+    if (!ref.current) return;
+    const target = visible ? 1 : 0;
+    opacityRef.current += (target - opacityRef.current) * 0.08;
+    const pulse = 0.7 + Math.sin(t.current * 3.5) * 0.3;
+    ref.current.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mat = (child as THREE.Mesh).material as THREE.MeshBasicMaterial;
+        if (mat && mat.transparent) {
+          mat.opacity = opacityRef.current * pulse * (mat.userData.baseAlpha ?? 1);
+        }
+      }
+    });
+    // Animated sweep line traversing the layout
+    if (sweepRef.current && position) {
+      const sweepT = (t.current % 1.8) / 1.8;
+      sweepRef.current.position.x = position[0] - 2 + sweepT * 4;
+      const sm = sweepRef.current.material as THREE.MeshBasicMaterial;
+      sm.opacity = opacityRef.current * (1 - sweepT) * 0.9;
+    }
+  });
+
+  if (!position) return null;
+
+  const [px, pz] = position;
+  // Transformer offset to one corner of the placement zone
+  const tx = px - 2.6;
+  const tz = pz + 0.4;
+  const dx = px - tx;
+  const dz = pz - tz;
+  const length = Math.hypot(dx, dz);
+  const cx = (px + tx) / 2;
+  const cz = (pz + tz) / 2;
+  const angle = Math.atan2(dz, dx);
+
+  // Second cable to the nearest road (find perpendicular projection onto Ring 1)
+  const ring1Z = -3.0;
+  const ring1Dx = 0;
+  const ring1Dz = ring1Z - tz;
+  const ring1Length = Math.abs(ring1Dz);
+  const ring1Cx = tx;
+  const ring1Cz = (tz + ring1Z) / 2;
+
+  const cableColor = '#7DC9E3';
+  const tagColor = '#FFE08A';
+
+  // x-ray meshes render LAST and ignore depth, so they always appear through
+  // any occluding geometry (the placed building, sidewalks, etc.) — that is
+  // literally what makes this read as an x-ray scan rather than a buried
+  // overlay that disappears under the foundation.
+  const xrayMatProps = { transparent: true, depthWrite: false, depthTest: false, toneMapped: false } as const;
+  const xrayY = 0.1;
+
+  return (
+    <group ref={ref}>
+      {/* Dark "ground cut-away" under the placement zone */}
+      <mesh position={[(px + tx) / 2, xrayY, (pz + tz) / 2]} renderOrder={5}>
+        <boxGeometry args={[Math.abs(tx - px) + 1.8, 0.02, Math.abs(tz - pz) + 1.8]} />
+        <meshBasicMaterial color={'#0E2738'} {...xrayMatProps} opacity={0} />
+      </mesh>
+      {/* Transformer footprint */}
+      <mesh position={[tx, xrayY + 0.01, tz]} renderOrder={6}>
+        <boxGeometry args={[0.85, 0.02, 0.6]} />
+        <meshBasicMaterial color={cableColor} {...xrayMatProps} opacity={0} />
+      </mesh>
+      {/* Transformer interior "T" marker (cross of two thin bars) */}
+      <mesh position={[tx, xrayY + 0.02, tz]} renderOrder={7}>
+        <boxGeometry args={[0.6, 0.02, 0.1]} />
+        <meshBasicMaterial color={'#FFFFFF'} {...xrayMatProps} opacity={0} />
+      </mesh>
+      <mesh position={[tx, xrayY + 0.02, tz]} renderOrder={7}>
+        <boxGeometry args={[0.1, 0.02, 0.4]} />
+        <meshBasicMaterial color={'#FFFFFF'} {...xrayMatProps} opacity={0} />
+      </mesh>
+      {/* Cable trench from transformer to building */}
+      <mesh position={[cx, xrayY + 0.01, cz]} rotation={[0, -angle, 0]} renderOrder={6}>
+        <boxGeometry args={[length, 0.02, 0.16]} />
+        <meshBasicMaterial color={cableColor} {...xrayMatProps} opacity={0} />
+      </mesh>
+      {/* Building tie-in pad (ring on the ground at building base) */}
+      <mesh position={[px, xrayY + 0.02, pz]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={7}>
+        <ringGeometry args={[0.24, 0.34, 28]} />
+        <meshBasicMaterial color={tagColor} {...xrayMatProps} opacity={0} side={THREE.DoubleSide} />
+      </mesh>
+      {/* Secondary cable from transformer to nearest road feeder (Ring Road 1) */}
+      <mesh position={[ring1Cx, xrayY + 0.01, ring1Cz]} rotation={[0, -Math.atan2(ring1Dz, ring1Dx), 0]} renderOrder={6}>
+        <boxGeometry args={[ring1Length, 0.02, 0.1]} />
+        <meshBasicMaterial color={cableColor} {...xrayMatProps} opacity={0} />
+      </mesh>
+      {/* Tag floating above transformer */}
+      <Html position={[tx, 1.2, tz]} center distanceFactor={10}>
+        <div style={{
+          background: 'rgba(31,42,38,0.92)',
+          color: '#E2DFDA',
+          padding: '5px 12px',
+          borderRadius: 999,
+          fontSize: 12,
+          fontWeight: 600,
+          letterSpacing: '0.04em',
+          whiteSpace: 'nowrap',
+          boxShadow: '0 4px 14px rgba(31,42,38,0.3)',
+          opacity: opacityRef.current,
+        }}>
+          Transformer · 1.0 MW · 22 kV
+        </div>
+      </Html>
+      <Html position={[px, 0.9, pz]} center distanceFactor={10}>
+        <div style={{
+          background: tagColor,
+          color: '#1F2A26',
+          padding: '5px 12px',
+          borderRadius: 999,
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: '0.04em',
+          whiteSpace: 'nowrap',
+          opacity: opacityRef.current,
+        }}>
+          Connection point
+        </div>
+      </Html>
+      {/* Sweep line that traverses the layout */}
+      <mesh
+        ref={sweepRef}
+        position={[px, xrayY + 0.03, pz]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        renderOrder={8}
+      >
+        <planeGeometry args={[0.06, Math.max(length, ring1Length) * 1.3]} />
+        <meshBasicMaterial color={'#FFFFFF'} {...xrayMatProps} opacity={0} />
+      </mesh>
+    </group>
+  );
+}
+
 // ─── Sun arc animator + visible sun marker ─────────────────────────────────
 function SolarClock({ state, elapsedRef }: { state: FlowState; elapsedRef: ElapsedRef }) {
   const lastStep = useRef(state.step);
@@ -2007,6 +2156,16 @@ function computeCameraGoal(state: FlowState, selectedRoad: Road | null): { pos: 
         locked: true,
       };
     }
+    if (state.step === 'planning-xray-reveal') {
+      // Nearly top-down so the building footprint never occludes the
+      // transformer-to-cable layout. Camera is slightly south of building so
+      // the layout reads from camera→away rather than away→camera.
+      return {
+        pos: new THREE.Vector3(px - 0.8, 8.5, pz + 1.2),
+        target: new THREE.Vector3(px - 1.0, 0, pz - 0.2),
+        locked: true,
+      };
+    }
     if (state.step === 'planning-animating-solar') {
       return {
         pos: new THREE.Vector3(px + 3.2, 6.4, pz + 3.2),
@@ -2192,6 +2351,12 @@ export default function Scene({ state, onPickGround, onPickRoad }: SceneProps) {
           focusPos={animatingSolar && state.placed.length > 0
             ? state.placed[state.placed.length - 1].position
             : null}
+        />
+        <UndergroundXRay
+          position={state.step === 'planning-xray-reveal' && state.placed.length > 0
+            ? state.placed[state.placed.length - 1].position
+            : null}
+          visible={state.step === 'planning-xray-reveal'}
         />
 
         {/* Placed buildings & EVSE */}

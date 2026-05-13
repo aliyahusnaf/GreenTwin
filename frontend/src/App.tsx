@@ -8,6 +8,7 @@ import { THEME } from './theme';
 
 const ANIM_DURATION: Record<string, number> = {
   'planning-animating': 2400,
+  'planning-xray-reveal': 2800,
   'planning-animating-solar': 7000,
   'policy-animating': 11000,
 };
@@ -114,6 +115,7 @@ function stepLabel(step: string): string {
     'planning-greet': 'Choose what to build',
     'planning-await-where': 'Pick a site',
     'planning-animating': 'Building',
+    'planning-xray-reveal': 'Scanning subsurface',
     'planning-ask-solar': 'Solar?',
     'planning-animating-solar': 'Installing solar',
     'planning-complete': 'Plan ready',

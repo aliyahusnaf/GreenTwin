@@ -7,6 +7,7 @@ export type Step =
   | 'planning-greet'
   | 'planning-await-where'
   | 'planning-animating'
+  | 'planning-xray-reveal'
   | 'planning-ask-solar'
   | 'planning-animating-solar'
   | 'planning-complete'
@@ -319,10 +320,27 @@ export function reducer(state: FlowState, action: FlowAction): FlowState {
             ? { id: uid(), kind: 'evse', position: pos, hasSolar: false }
             : { id: uid(), kind: 'building', position: pos, hasSolar: false };
 
+        return {
+          ...state,
+          step: 'planning-xray-reveal',
+          busy: true,
+          placed: [...state.placed, placed],
+          messages: [
+            ...state.messages,
+            aiMsg(
+              state.intent === 'evse'
+                ? 'Site committed. Now scanning subsurface infrastructure — locating cable trenches and the nearest transformer feeder…'
+                : 'Site committed. Now scanning subsurface infrastructure — locating cable trenches and the nearest transformer feeder…',
+            ),
+          ],
+        };
+      }
+
+      if (state.step === 'planning-xray-reveal') {
         const aiResult =
           state.intent === 'evse'
-            ? "EVSE site live — 8 fast chargers (150 kW). Peak load 1.2 MW exceeds the local transformer (1.0 MW). I've pre-sized a 540 kWh BESS to absorb the spike. Want a solar canopy on top to power it cleanly?"
-            : "Tower complete: 28 floors, ~12,400 m² gross. Adds ~4.2 GWh/yr to district demand. Want me to install rooftop solar to offset it?";
+            ? "Subsurface mapped. EVSE site is live — 8 fast chargers (150 kW). Peak load 1.2 MW exceeds the local transformer (1.0 MW). I've pre-sized a 540 kWh BESS to absorb the spike. Want a solar canopy on top to power it cleanly?"
+            : "Subsurface mapped. Tower complete: 28 floors, ~12,400 m² gross. Adds ~4.2 GWh/yr to district demand. Want me to install rooftop solar to offset it?";
 
         const kpis: Kpi[] =
           state.intent === 'evse'
@@ -343,7 +361,6 @@ export function reducer(state: FlowState, action: FlowAction): FlowState {
           ...state,
           step: 'planning-ask-solar',
           busy: false,
-          placed: [...state.placed, placed],
           kpis,
           messages: [...state.messages, aiMsg(aiResult)],
         };
@@ -462,9 +479,9 @@ export function deriveKpis(state: FlowState): Kpi[] | null {
     }
     return [
       { label: 'Cells placed', value: `${cellsPlaced} / ${cellsTotal}` },
-      { label: 'Yield', value: `${yieldMwh} MWh/yr` },
-      { label: 'Payback', value: `${payback.toFixed(1)} yr` },
-      { label: 'Lifetime CO₂', value: `${co2.toFixed(1)} kt` },
+      { label: 'Annual yield', value: `${yieldMwh} MWh` },
+      { label: 'Financial payback', value: `${payback.toFixed(1)} yr` },
+      { label: 'CO₂ offset', value: `${co2.toFixed(1)} kt` },
     ];
   }
   if (state.intent === 'evse') {
@@ -475,6 +492,7 @@ export function deriveKpis(state: FlowState): Kpi[] | null {
     const bessHeadroom = Math.max(0, s.bessKwh - overload * 1000 * 0.45);
     const gridRisk = overload <= 0 || s.bessKwh >= overload * 1000 * 0.45 ? 'Mitigated' : 'Constrained';
     const yieldMwh = Math.round((s.panelCoverage / 100) * 132);
+    const co2EvseKt = (yieldMwh * 0.56 * 25 / 1000).toFixed(1);
     if (state.step === 'planning-ask-solar') {
       return [
         { label: 'Chargers', value: `${s.chargers} × 150 kW` },
@@ -484,9 +502,9 @@ export function deriveKpis(state: FlowState): Kpi[] | null {
       ];
     }
     return [
-      { label: 'Chargers', value: `${s.chargers}` },
-      { label: 'Solar yield', value: `${yieldMwh} MWh/yr` },
-      { label: 'BESS / headroom', value: `${Math.round(bessHeadroom)} kWh` },
+      { label: 'Annual yield', value: `${yieldMwh} MWh` },
+      { label: 'CO₂ offset', value: `${co2EvseKt} kt` },
+      { label: 'BESS headroom', value: `${Math.round(bessHeadroom)} kWh` },
       { label: 'Grid risk', value: gridRisk },
     ];
   }
