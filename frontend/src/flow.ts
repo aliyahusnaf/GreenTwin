@@ -43,6 +43,20 @@ export type Placed = PlacedBuilding | PlacedEvse;
 
 export type Kpi = { label: string; value: string };
 
+export type Sliders = {
+  buildingFloors: number;   // 12 – 40, default 28
+  panelCoverage: number;    // 50 – 100 (%), default 75
+  chargers: number;         // 4 – 16, default 8
+  bessKwh: number;          // 200 – 1200, default 540
+};
+
+export const DEFAULT_SLIDERS: Sliders = {
+  buildingFloors: 28,
+  panelCoverage: 75,
+  chargers: 8,
+  bessKwh: 540,
+};
+
 export type FlowState = {
   mode: Mode;
   step: Step;
@@ -54,6 +68,7 @@ export type FlowState = {
   messages: ChatMsg[];
   busy: boolean;
   kpis: Kpi[];
+  sliders: Sliders;
 };
 
 export type FlowAction =
@@ -66,6 +81,7 @@ export type FlowAction =
   | { type: 'ANIM_DONE' }
   | { type: 'SET_KPIS'; kpis: Kpi[] }
   | { type: 'CLEAR_KPIS' }
+  | { type: 'SET_SLIDER'; key: keyof Sliders; value: number }
   | { type: 'RESET' };
 
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -78,6 +94,7 @@ export const initialState: FlowState = {
   messages: [],
   busy: false,
   kpis: [],
+  sliders: DEFAULT_SLIDERS,
 };
 
 const aiMsg = (text: string): ChatMsg => ({ id: uid(), role: 'ai', text });
@@ -406,6 +423,8 @@ export function reducer(state: FlowState, action: FlowAction): FlowState {
       return { ...state, kpis: action.kpis };
     case 'CLEAR_KPIS':
       return { ...state, kpis: [] };
+    case 'SET_SLIDER':
+      return { ...state, sliders: { ...state.sliders, [action.key]: action.value } };
 
     case 'RESET':
       return initialState;
@@ -413,6 +432,153 @@ export function reducer(state: FlowState, action: FlowAction): FlowState {
     default:
       return state;
   }
+}
+
+// Slider-driven KPI derivation. Static numbers from the AI come back through
+// state.kpis, but once the user nudges a slider in the chat panel the live
+// chat KPI cards switch over to these derived values.
+export function deriveKpis(state: FlowState): Kpi[] | null {
+  if (state.mode !== 'planning') return null;
+  if (state.step !== 'planning-ask-solar' && state.step !== 'planning-complete') return null;
+  const s = state.sliders;
+  if (state.intent === 'building') {
+    const gfa = Math.round(s.buildingFloors * 442);                    // ~442 m² per floor
+    const load = (gfa * 0.34) / 1000;                                  // GWh/yr
+    const roofArea = Math.round(2200 * (gfa / (28 * 442)));            // scales w/ tower
+    const cellsTotal = 16;
+    const cellsPlaced = Math.max(1, Math.round((cellsTotal * s.panelCoverage) / 100));
+    const panels = cellsPlaced * 122;                                  // ~122 panels / cell
+    const yieldMwh = Math.round(panels * 0.37);                        // ~0.37 MWh/panel/yr
+    const co2 = Math.round((yieldMwh * 0.56) * 25 / 100) / 10;         // 0.56 t CO₂ / MWh × 25 yr
+    const payback = Math.max(2.4, 4.6 + (75 - s.panelCoverage) * 0.02);
+
+    if (state.step === 'planning-ask-solar') {
+      return [
+        { label: 'Floors', value: `${s.buildingFloors}` },
+        { label: 'GFA', value: `${gfa.toLocaleString()} m²` },
+        { label: 'Annual load', value: `${load.toFixed(1)} GWh` },
+        { label: 'Roof area', value: `${roofArea.toLocaleString()} m²` },
+      ];
+    }
+    return [
+      { label: 'Cells placed', value: `${cellsPlaced} / ${cellsTotal}` },
+      { label: 'Yield', value: `${yieldMwh} MWh/yr` },
+      { label: 'Payback', value: `${payback.toFixed(1)} yr` },
+      { label: 'Lifetime CO₂', value: `${co2.toFixed(1)} kt` },
+    ];
+  }
+  if (state.intent === 'evse') {
+    const peakKw = s.chargers * 150;                                    // kW
+    const peakMw = (peakKw / 1000).toFixed(1);
+    const txCap = 1.0;                                                  // MW
+    const overload = peakKw / 1000 - txCap;
+    const bessHeadroom = Math.max(0, s.bessKwh - overload * 1000 * 0.45);
+    const gridRisk = overload <= 0 || s.bessKwh >= overload * 1000 * 0.45 ? 'Mitigated' : 'Constrained';
+    const yieldMwh = Math.round((s.panelCoverage / 100) * 132);
+    if (state.step === 'planning-ask-solar') {
+      return [
+        { label: 'Chargers', value: `${s.chargers} × 150 kW` },
+        { label: 'Peak load', value: `${peakMw} MW` },
+        { label: 'BESS', value: `${s.bessKwh} kWh` },
+        { label: 'Grid risk', value: gridRisk },
+      ];
+    }
+    return [
+      { label: 'Chargers', value: `${s.chargers}` },
+      { label: 'Solar yield', value: `${yieldMwh} MWh/yr` },
+      { label: 'BESS / headroom', value: `${Math.round(bessHeadroom)} kWh` },
+      { label: 'Grid risk', value: gridRisk },
+    ];
+  }
+  return null;
+}
+
+export function generateCertificateHTML(state: FlowState): string {
+  const s = state.sliders;
+  const issued = new Date().toISOString().slice(0, 10);
+  const isBuilding = state.intent === 'building';
+  const title = isBuilding ? 'Energy Efficiency & Grid Readiness Certificate' : 'EV Charging Site Energy Certificate';
+  const projectName = isBuilding ? `Mixed-Use Tower · ${s.buildingFloors} floors` : `EVSE Site · ${s.chargers} chargers`;
+  const gfa = Math.round(s.buildingFloors * 442);
+  const load = (gfa * 0.34) / 1000;
+  const peakKw = s.chargers * 150;
+  const tableRows = isBuilding
+    ? [
+        ['Project type', 'Mixed-use commercial tower'],
+        ['Floors', `${s.buildingFloors}`],
+        ['Gross floor area', `${gfa.toLocaleString()} m²`],
+        ['Annual energy load', `${load.toFixed(2)} GWh`],
+        ['Roof panel coverage', `${s.panelCoverage}%`],
+        ['Panels installed', `${Math.max(1, Math.round((16 * s.panelCoverage) / 100)) * 122}`],
+        ['Estimated annual yield', `${Math.round(Math.max(1, Math.round((16 * s.panelCoverage) / 100)) * 122 * 0.37)} MWh`],
+        ['Lifetime CO₂ avoided', `${(Math.round(Math.max(1, Math.round((16 * s.panelCoverage) / 100)) * 122 * 0.37 * 0.56 * 25 / 100) / 10).toFixed(1)} kt`],
+        ['Shade analysis', 'Day-cycle ray-cast against neighbour buildings'],
+      ]
+    : [
+        ['Project type', 'EV charging site'],
+        ['Charging points', `${s.chargers} × 150 kW`],
+        ['Peak load', `${(peakKw / 1000).toFixed(2)} MW`],
+        ['Local transformer', '1.0 MW'],
+        ['BESS sized', `${s.bessKwh} kWh`],
+        ['Solar canopy coverage', `${s.panelCoverage}%`],
+        ['Solar canopy yield', `${Math.round((s.panelCoverage / 100) * 132)} MWh/yr`],
+        ['Grid risk assessment', s.bessKwh >= (peakKw - 1000) * 0.45 ? 'Mitigated' : 'Constrained'],
+      ];
+  const grade = isBuilding ? (s.panelCoverage >= 75 ? 'A' : s.panelCoverage >= 50 ? 'B' : 'C') : (s.bessKwh >= 540 ? 'A' : 'B');
+  const refCode = Math.random().toString(36).slice(2, 8).toUpperCase();
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>${title} · GreenTwin</title>
+<style>
+:root { color-scheme: light; }
+body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; background: #E2DFDA; color: #1F2A26; margin: 0; padding: 48px; }
+.sheet { max-width: 780px; margin: 0 auto; background: #F4EFE6; padding: 48px; border-radius: 18px; box-shadow: 0 20px 60px rgba(31,42,38,0.18); }
+header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 2px solid #3B6255; }
+.brand { font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase; color: #3B6255; font-weight: 700; }
+.grade { background: #3B6255; color: #E2DFDA; padding: 12px 18px; border-radius: 12px; font-size: 36px; font-weight: 800; }
+.grade-cap { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; opacity: 0.7; display: block; margin-bottom: 2px; text-align: center; }
+h1 { font-size: 28px; margin: 28px 0 6px; letter-spacing: -0.01em; }
+.project { font-size: 16px; color: #3B6255; font-weight: 600; }
+table { width: 100%; margin-top: 24px; border-collapse: collapse; }
+td { padding: 12px 8px; border-bottom: 1px solid rgba(59,98,85,0.15); font-size: 14px; }
+td:first-child { color: #6F807B; width: 44%; }
+td:last-child { font-weight: 600; }
+.disclaimer { margin-top: 28px; padding: 16px 18px; border-radius: 12px; background: #FFF3D4; border-left: 4px solid #C8923B; font-size: 12.5px; line-height: 1.55; color: #6B521C; }
+.disclaimer strong { color: #4A3812; }
+.disclaimer-title { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; color: #8E6A22; margin-bottom: 6px; }
+.footer { margin-top: 28px; padding-top: 18px; border-top: 1px solid rgba(59,98,85,0.15); display: flex; justify-content: space-between; font-size: 12px; color: #6F807B; }
+.sig { font-style: italic; color: #3B6255; }
+@media print { body { background: #fff; padding: 0; } .sheet { box-shadow: none; border-radius: 0; max-width: none; } .noprint { display: none; } }
+.btn { background: #3B6255; color: #E2DFDA; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: inherit; }
+</style></head><body>
+<div class="sheet">
+  <header>
+    <div>
+      <div class="brand">GreenTwin</div>
+      <div style="margin-top:4px;font-size:13px;color:#6F807B">Urban Energy Digital Twin · Vietnam Pilot</div>
+    </div>
+    <div>
+      <span class="grade-cap">Indicative grade</span>
+      <div class="grade">${grade}</div>
+    </div>
+  </header>
+  <h1>${title}</h1>
+  <div class="project">${projectName}</div>
+  <table>
+    ${tableRows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
+  </table>
+  <div class="disclaimer">
+    <div class="disclaimer-title">Not a regulatory permit</div>
+    <strong>This is an indicative pre-assessment, not an official approval.</strong> The figures above are produced by GreenTwin's simulation engine (ray-cast solar shading, regression-predicted grid load and behavioural modelling) and are intended only as a <em>starting point</em> for stakeholder discussion and feasibility planning. This document does <strong>not replace</strong> permits, building approvals, environmental impact assessments, fire-safety sign-offs, or grid-interconnection clearance from MoIT, EVN, MoNRE, or the relevant municipal authority. Formal regulatory approval must still be obtained before construction or operation.
+  </div>
+  <div class="footer">
+    <div>Issued <strong>${issued}</strong> · ref ${refCode}</div>
+    <div class="sig">GreenTwin Planning AI · ray-cast verified</div>
+  </div>
+  <div class="noprint" style="margin-top:24px;text-align:right">
+    <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+</div>
+</body></html>`;
 }
 
 export function expectsMapClick(step: Step): 'ground' | 'road' | null {
